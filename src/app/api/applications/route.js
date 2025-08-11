@@ -1,0 +1,38 @@
+import { NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+)
+
+export async function GET() {
+  try {
+    const { data, error } = await supabase
+      .from('applications')
+      .select('*')
+      .order('submitted_at', { ascending: false })
+
+    if (error) throw error
+    return NextResponse.json(data)
+  } catch (err) {
+    console.error('GET /api/applications error', err)
+    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function POST(request) {
+  try {
+    const body = await request.json()
+    const { data, error } = await supabase
+      .from('applications')
+      .insert([body])
+      .select() // return inserted rows
+
+    if (error) throw error
+    return NextResponse.json({ success: true, data }, { status: 201 })
+  } catch (err) {
+    console.error('POST /api/applications error', err)
+    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 })
+  }
+}
